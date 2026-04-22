@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-04-22T00:00:00Z",
+  "project": "claude-cot-research-extension",
+  "indexVersion": "0.1.0",
+  "models": [],
+  "cards": [],
+  "artifacts": {
+    "systemCardIndex": "docs/index/systemCardIndex.json",
+    "modelCatalog": "docs/index/modelCatalog.json",
+    "cardManifest": "docs/index/cardManifest.json"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "claude-cot-research-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser extension and pipeline for CoT annotation with system-card citations.",
+  "scripts": {
+    "ingest:card": "node tools/card-ingest/parseSystemCard.js",
+    "build:index": "node tools/card-ingest/buildCitationIndex.js"
+  }
+}

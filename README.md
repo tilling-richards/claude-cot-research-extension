@@ -1,0 +1,1 @@
+# claude-cot-research-extension

@@ -6,6 +6,8 @@
     "[class*='reason']",
     "[data-testid*='message']",
     "[class*='message']",
+    "[data-testid*='assistant']",
+    "[class*='assistant']",
     "article",
     "main div"
   ];
@@ -27,6 +29,17 @@
     if (!text) return false;
     if (text.length < 80) return false;
     return /\b(i|reason|because|therefore|cannot|can't|likely|uncertain|analysis)\b/i.test(text);
+  }
+
+  function isInteractiveOrInputNode(el) {
+    if (!(el instanceof HTMLElement)) return true;
+    if (el.isContentEditable) return true;
+    if (el.closest("[contenteditable='true']")) return true;
+    if (el.matches("input, textarea, button, nav, header, footer, aside")) return true;
+    if (el.closest("input, textarea, button, nav, header, footer, aside")) return true;
+    const aria = (el.getAttribute("aria-label") || "").toLowerCase();
+    if (aria.includes("message") || aria.includes("prompt") || aria.includes("input")) return true;
+    return false;
   }
 
   async function getSettings() {
@@ -76,14 +89,22 @@
     for (const selector of SELECTOR_CANDIDATES) {
       document.querySelectorAll(selector).forEach((el) => {
         if (!(el instanceof HTMLElement)) return;
+        if (isInteractiveOrInputNode(el)) return;
         const text = (el.textContent || "").trim();
-        if (!text || text.length < 80) return;
+        if (!text || text.length < 140) return;
+        if (text.length > 12000) return;
+        // Prefer assistant response-like blocks over broad layout containers.
+        const assistantHint = /assistant|claude|response|reason|analysis|thought/i.test(
+          `${el.className || ""} ${(el.getAttribute("data-testid") || "")}`
+        );
+        if (!assistantHint && selector === "main div" && text.length < 300) return;
         if (seen.has(el)) return;
         seen.add(el);
         list.push(el);
       });
     }
-    return list.slice(0, 150);
+    list.sort((a, b) => (b.textContent || "").length - (a.textContent || "").length);
+    return list.slice(0, 60);
   }
 
   function observeDom() {

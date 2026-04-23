@@ -8,6 +8,9 @@
     "[class*='message']",
     "[data-testid*='assistant']",
     "[class*='assistant']",
+    "div[dir='auto']",
+    "p",
+    "li",
     "article",
     "main div"
   ];
@@ -79,6 +82,18 @@
 
     const settings = await getSettings();
     const classification = await globalScope.CotHybridClassifier.classifySpan(text, { settings });
+    if (!classification?.signals?.length && text.length >= 220) {
+      classification.signals = [
+        {
+          type: "interesting",
+          ruleId: "fallback-long-span-review",
+          confidence: 0.52,
+          reason: "Fallback review marker: long response span detected but no explicit rule matched."
+        }
+      ];
+      classification.strongestInteresting = classification.signals[0];
+      classification.strongestExpected = null;
+    }
     if (!classification?.signals?.length) return;
     globalScope.CotAnnotator.annotateBlock(node, classification, lookupCitation);
   }
@@ -91,13 +106,14 @@
         if (!(el instanceof HTMLElement)) return;
         if (isInteractiveOrInputNode(el)) return;
         const text = (el.textContent || "").trim();
-        if (!text || text.length < 140) return;
+        if (!text || text.length < 90) return;
         if (text.length > 12000) return;
         // Prefer assistant response-like blocks over broad layout containers.
         const assistantHint = /assistant|claude|response|reason|analysis|thought/i.test(
           `${el.className || ""} ${(el.getAttribute("data-testid") || "")}`
         );
-        if (!assistantHint && selector === "main div" && text.length < 300) return;
+        if (!assistantHint && (selector === "main div" || selector === "p" || selector === "li") && text.length < 220)
+          return;
         if (seen.has(el)) return;
         seen.add(el);
         list.push(el);

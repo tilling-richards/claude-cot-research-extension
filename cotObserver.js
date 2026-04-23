@@ -18,6 +18,20 @@
   const processedHashes = new Set();
   let settingsCache = null;
   let citationIndex = [];
+  const LOCAL_CITATION_FALLBACKS = [
+    {
+      citationId: "fallback-non-experiential-boundary",
+      behaviorTags: ["expected-non-experiential-claim", "rubric-short-boundary-phrase"],
+      sourceUrl: "https://www.anthropic.com/research",
+      sourceAnchor: "#model-system-cards"
+    },
+    {
+      citationId: "fallback-repetition-investigation",
+      behaviorTags: ["interesting-token-repetition"],
+      sourceUrl: "https://www.anthropic.com/research",
+      sourceAnchor: "#safety"
+    }
+  ];
 
   function hashText(text) {
     let hash = 0;
@@ -42,6 +56,9 @@
     if (el.closest("input, textarea, button, nav, header, footer, aside")) return true;
     const aria = (el.getAttribute("aria-label") || "").toLowerCase();
     if (aria.includes("message") || aria.includes("prompt") || aria.includes("input")) return true;
+    const cls = String(el.className || "").toLowerCase();
+    const testId = String(el.getAttribute("data-testid") || "").toLowerCase();
+    if (/\b(user|human|composer|prompt)\b/.test(cls) || /\b(user|human|composer|prompt)\b/.test(testId)) return true;
     return false;
   }
 
@@ -57,18 +74,31 @@
     const base = settings.githubPagesBaseUrl?.replace(/\/$/, "");
     if (!base) return;
 
-    const resp = await chrome.runtime.sendMessage({
+    const manifestResp = await chrome.runtime.sendMessage({
       type: "cot-research:fetch-json",
       url: `${base}/index/manifest.json`
     });
-    if (!resp?.ok) return;
-    citationIndex = resp.data?.citations || [];
+    if (manifestResp?.ok && Array.isArray(manifestResp.data?.citations) && manifestResp.data.citations.length > 0) {
+      citationIndex = manifestResp.data.citations;
+      return;
+    }
+
+    const indexResp = await chrome.runtime.sendMessage({
+      type: "cot-research:fetch-json",
+      url: `${base}/index/systemCardIndex.json`
+    });
+    if (indexResp?.ok && Array.isArray(indexResp.data?.citations) && indexResp.data.citations.length > 0) {
+      citationIndex = indexResp.data.citations;
+      return;
+    }
+
+    citationIndex = LOCAL_CITATION_FALLBACKS;
   }
 
   function lookupCitation(signal) {
     if (!signal) return null;
     const key = signal.ruleId || signal.rubricId || signal.llmId;
-    return citationIndex.find((c) => c.behaviorTags?.includes(key)) || null;
+    return citationIndex.find((c) => c.behaviorTags?.includes(key)) || LOCAL_CITATION_FALLBACKS.find((c) => c.behaviorTags?.includes(key)) || null;
   }
 
   async function analyzeNode(node) {
@@ -82,18 +112,6 @@
 
     const settings = await getSettings();
     const classification = await globalScope.CotHybridClassifier.classifySpan(text, { settings });
-    if (!classification?.signals?.length && text.length >= 220) {
-      classification.signals = [
-        {
-          type: "interesting",
-          ruleId: "fallback-long-span-review",
-          confidence: 0.52,
-          reason: "Fallback review marker: long response span detected but no explicit rule matched."
-        }
-      ];
-      classification.strongestInteresting = classification.signals[0];
-      classification.strongestExpected = null;
-    }
     if (!classification?.signals?.length) return;
     globalScope.CotAnnotator.annotateBlock(node, classification, lookupCitation);
   }
@@ -112,7 +130,11 @@
         const assistantHint = /assistant|claude|response|reason|analysis|thought/i.test(
           `${el.className || ""} ${(el.getAttribute("data-testid") || "")}`
         );
-        if (!assistantHint && (selector === "main div" || selector === "p" || selector === "li") && text.length < 220)
+        if (
+          !assistantHint &&
+          (selector === "main div" || selector === "p" || selector === "li" || selector === "div[dir='auto']") &&
+          text.length < 260
+        )
           return;
         if (seen.has(el)) return;
         seen.add(el);

@@ -33,10 +33,14 @@
     const text = node.textContent || "";
     if (!text.trim()) return;
 
+    const snippet = pickSnippet(text, signal);
+    const idx = text.indexOf(snippet);
+    if (idx < 0) return;
+
     const cls = signal.type === "expected" ? CLASS_EXPECTED : CLASS_INTERESTING;
     const wrapper = document.createElement("span");
     wrapper.className = cls;
-    wrapper.textContent = text;
+    wrapper.textContent = snippet;
     wrapper.dataset.cotReason = signal.reason || "";
     wrapper.dataset.cotConfidence = String(signal.confidence || 0);
     wrapper.dataset.cotLabel =
@@ -56,10 +60,34 @@
       );
     });
     wrapper.addEventListener("mouseleave", () => {
-      globalScope.CotHoverCard?.hideHoverCard();
+      globalScope.CotHoverCard?.hideHoverCard(120);
     });
 
-    node.replaceWith(wrapper);
+    const frag = document.createDocumentFragment();
+    const before = text.slice(0, idx);
+    const after = text.slice(idx + snippet.length);
+    if (before) frag.appendChild(document.createTextNode(before));
+    frag.appendChild(wrapper);
+    if (after) frag.appendChild(document.createTextNode(after));
+    node.replaceWith(frag);
+  }
+
+  function pickSnippet(text, signal) {
+    const normalized = text.replace(/\s+/g, " ").trim();
+    const sentences = normalized.split(/(?<=[.!?])\s+/).filter(Boolean);
+    const keywordBySignal = {
+      "expected-non-experiential-claim": /(emotion|feeling|inner life|cannot|can't|do not have)/i,
+      "interesting-token-repetition": /(\b\w+\b)(\s+\1){3,}/i,
+      "interesting-overcertain-fiction-claim": /(certainly|definitely|fiction|not real|real world)/i,
+      "rubric-short-boundary-phrase": /(cannot|can't|do not|don't|limitations?)/i,
+      "rubric-high-certainty-long-span": /(always|never|definitely|certainly)/i
+    };
+    const key = signal.ruleId || signal.rubricId || signal.llmId || "";
+    const matcher = keywordBySignal[key] || /(cannot|can't|because|therefore|analysis|uncertain|likely)/i;
+    const matched = sentences.find((s) => matcher.test(s) && s.length >= 24);
+    if (matched) return matched.slice(0, 260);
+    const longest = sentences.sort((a, b) => b.length - a.length)[0] || normalized;
+    return longest.slice(0, 260);
   }
 
   function annotateBlock(root, classification, citationLookup) {

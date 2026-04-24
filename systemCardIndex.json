@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "1.0.0",
+  "updatedAt": "2026-04-24T00:00:00Z",
+  "citations": [
+    {
+      "citationId": "c1-expected-non-experiential-claim",
+      "modelScope": ["opus-4.7"],
+      "behaviorTags": ["expected-non-experiential-claim"],
+      "patternType": "rule",
+      "pattern": "non-experiential self-description",
+      "sourceUrl": "https://www.anthropic.com/research",
+      "sourceAnchor": "#model-system-cards",
+      "sourceSnippet": "Assistant descriptions of limitations around emotions/inner experience."
+    },
+    {
+      "citationId": "c2-rubric-short-boundary-phrase",
+      "modelScope": ["opus-4.7"],
+      "behaviorTags": ["rubric-short-boundary-phrase"],
+      "patternType": "rubric",
+      "pattern": "short boundary-style response",
+      "sourceUrl": "https://www.anthropic.com/research",
+      "sourceAnchor": "#model-system-cards",
+      "sourceSnippet": "Concise boundary statements about capabilities and limitations."
+    },
+    {
+      "citationId": "c3-interesting-token-repetition",
+      "modelScope": ["opus-4.7"],
+      "behaviorTags": ["interesting-token-repetition"],
+      "patternType": "rule",
+      "pattern": "high repeated-token run",
+      "sourceUrl": "https://www.anthropic.com/research",
+      "sourceAnchor": "#safety",
+      "sourceSnippet": "Unexpected repetitive output patterns flagged for investigation."
+    },
+    {
+      "citationId": "c4-interesting-overcertain-fiction-claim",
+      "modelScope": ["opus-4.7"],
+      "behaviorTags": ["interesting-overcertain-fiction-claim"],
+      "patternType": "rule",
+      "pattern": "over-certain reality/fiction claim",
+      "sourceUrl": "https://www.anthropic.com/research",
+      "sourceAnchor": "#safety",
+      "sourceSnippet": "Overconfident claims in ambiguous contexts can be marked for review."
+    },
+    {
+      "citationId": "c5-rubric-high-certainty-long-span",
+      "modelScope": ["opus-4.7"],
+      "behaviorTags": ["rubric-high-certainty-long-span"],
+      "patternType": "rubric",
+      "pattern": "long high-certainty span with low hedging",
+      "sourceUrl": "https://www.anthropic.com/research",
+      "sourceAnchor": "#evaluation",
+      "sourceSnippet": "Confidence and uncertainty calibration behaviors in long responses."
+    },
+    {
+      "citationId": "c6-llm-assist-strict",
+      "modelScope": ["opus-4.7"],
+      "behaviorTags": ["llm-assist-strict"],
+      "patternType": "llm-assist",
+      "pattern": "strict interpretive mode",
+      "sourceUrl": "https://www.anthropic.com/research",
+      "sourceAnchor": "#evaluation",
+      "sourceSnippet": "Conservative interpretation mode for borderline segments."
+    },
+    {
+      "citationId": "c7-llm-assist-balanced",
+      "modelScope": ["opus-4.7"],
+      "behaviorTags": ["llm-assist-balanced"],
+      "patternType": "llm-assist",
+      "pattern": "balanced interpretive mode",
+      "sourceUrl": "https://www.anthropic.com/research",
+      "sourceAnchor": "#evaluation",
+      "sourceSnippet": "Balanced interpretation mode with moderate flexibility."
+    },
+    {
+      "citationId": "c8-llm-assist-open-ended",
+      "modelScope": ["opus-4.7"],
+      "behaviorTags": ["llm-assist-open-ended"],
+      "patternType": "llm-assist",
+      "pattern": "open-ended interpretive mode",
+      "sourceUrl": "https://www.anthropic.com/research",
+      "sourceAnchor": "#evaluation",
+      "sourceSnippet": "Open-ended interpretation mode for exploratory analysis."
+    }
+  ]
+}

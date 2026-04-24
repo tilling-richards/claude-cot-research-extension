@@ -18,6 +18,7 @@
   const processedHashes = new Set();
   let settingsCache = null;
   let citationIndex = [];
+  let citationSourceStatus = "uninitialized";
   const LOCAL_CITATION_FALLBACKS = [
     {
       citationId: "fallback-non-experiential-boundary",
@@ -80,6 +81,8 @@
     });
     if (manifestResp?.ok && Array.isArray(manifestResp.data?.citations) && manifestResp.data.citations.length > 0) {
       citationIndex = manifestResp.data.citations;
+      citationSourceStatus = "manifest";
+      console.info("[cot-research] citation source: manifest", citationIndex.length);
       return;
     }
 
@@ -89,10 +92,14 @@
     });
     if (indexResp?.ok && Array.isArray(indexResp.data?.citations) && indexResp.data.citations.length > 0) {
       citationIndex = indexResp.data.citations;
+      citationSourceStatus = "systemCardIndex";
+      console.info("[cot-research] citation source: systemCardIndex", citationIndex.length);
       return;
     }
 
     citationIndex = LOCAL_CITATION_FALLBACKS;
+    citationSourceStatus = "localFallback";
+    console.warn("[cot-research] citation source: localFallback", citationIndex.length);
   }
 
   function lookupCitation(signal) {
@@ -158,6 +165,11 @@
     const nodes = candidateNodes();
     console.info("[cot-research] candidate nodes:", nodes.length);
     await Promise.all(nodes.map((node) => analyzeNode(node)));
+    globalScope.__cotResearchDebug = {
+      getCitationSourceStatus: () => citationSourceStatus,
+      getCitationCount: () => citationIndex.length,
+      getCandidateNodeCount: () => candidateNodes().length
+    };
     observeDom();
   }
 
